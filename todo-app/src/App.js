@@ -1,15 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 
 function App() {
   const [task, setTask] = useState("");
-  const [todos, setTodos] = useState([]);
+  const [todos, setTodos] = useState(() => {
+    const saved = localStorage.getItem("todos");
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [editIndex, setEditIndex] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todos));
+  }, [todos]);
 
   const handleAdd = () => {
     if (task.trim()) {
-      setTodos([...todos, { text: task, completed: false }]);
+      if (editIndex !== null) {
+        const updatedTodos = [...todos];
+        updatedTodos[editIndex].text = task;
+        setTodos(updatedTodos);
+        setEditIndex(null);
+      } else {
+        setTodos([...todos, { text: task, completed: false }]);
+      }
       setTask("");
     }
+  };
+  const handleEdit = (index) => {
+    setTask(todos[index].text);
+    setEditIndex(index);
   };
 
   const handleToggle = (index) => {
@@ -39,6 +58,8 @@ function App() {
         {todos.map((todo, index) => (
           <li key={index} className={todo.completed ? "completed" : ""}>
             <span onClick={() => handleToggle(index)}>{todo.text}</span>
+            <button onClick={() => handleEdit(index)}>✏️</button>
+
             <button onClick={() => handleDelete(index)}>❌</button>
           </li>
         ))}
